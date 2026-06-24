@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.opentele.stacktrace.model.StackTraceData;
+import lombok.Getter;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,12 +20,20 @@ public class RedisStackTracePersistenceService {
 	private static final String STACKTRACE_INDEX_KEY = "stacktraces:index";
 	private static final String STACKTRACE_IP_INDEX_PREFIX = "stacktraces:ip:";
 
-	@Autowired
+	@Getter
 	@Qualifier("stringRedisTemplate")
-	private RedisTemplate<String, String> stringRedisTemplate;
+	private final RedisTemplate<String, String> stringRedisTemplate;
+	
+	@Getter
+	private final RedisTemplate<String, StackTraceData> redisTemplate;
 
-	@Autowired(required = false)
-	private RedisTemplate<String, StackTraceData> redisTemplate;
+	@Autowired
+	public RedisStackTracePersistenceService(
+			@Qualifier("stringRedisTemplate") RedisTemplate<String, String> stringRedisTemplate,
+			@Autowired(required = false) RedisTemplate<String, StackTraceData> redisTemplate) {
+		this.stringRedisTemplate = stringRedisTemplate;
+		this.redisTemplate = redisTemplate;
+	}
 
 	public void persistStackTrace(String traceId, StackTraceData data) {
 		String key = STACKTRACE_KEY_PREFIX + traceId;

@@ -3,10 +3,12 @@ package com.opentele.stacktrace.controller;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
@@ -22,6 +24,7 @@ import org.springframework.web.bind.annotation.RestController;
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.annotations.info.Info;
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.RequiredArgsConstructor;
 import com.opentele.stacktrace.exception.TelemetryException;
 import com.opentele.stacktrace.model.StackTraceData;
 import com.opentele.stacktrace.service.StackTraceTrackerService;
@@ -35,10 +38,10 @@ import com.opentele.stacktrace.service.StackTraceTrackerService;
 )
 @RestController
 @RequestMapping("/api")
+@RequiredArgsConstructor
 public class StackTraceController {
 
-	@Autowired
-	private StackTraceTrackerService trackerService;
+	private final StackTraceTrackerService trackerService;
 
 	@GetMapping("/health")
 	public ResponseEntity<Map<String, String>> health() {
@@ -97,6 +100,44 @@ public class StackTraceController {
 		Map<String, Object> response = new HashMap<>();
 		response.put("ip", ip);
 		response.put("stacktraces", trackerService.getStackTracesByIp(ip));
+		return ResponseEntity.ok(response);
+	}
+
+	@GetMapping("/tracked-stacktraces-filter")
+	public ResponseEntity<Map<String, Object>> filterStackTraces(
+			@RequestParam(required = false) String startDate,
+			@RequestParam(required = false) String endDate,
+			@RequestParam(required = false) String ip,
+			@RequestParam(required = false) String errorCode,
+			@RequestParam(required = false) String messageSearch) {
+		
+		LocalDate start = null;
+		LocalDate end = null;
+		
+		DateTimeFormatter formatter = DateTimeFormatter.ISO_LOCAL_DATE;
+		
+		if (startDate != null && !startDate.isEmpty()) {
+			start = LocalDate.parse(startDate, formatter);
+		}
+		if (endDate != null && !endDate.isEmpty()) {
+			end = LocalDate.parse(endDate, formatter);
+		}
+		
+		List<StackTraceData> results = trackerService.filterStackTraces(start, end, ip, errorCode, messageSearch);
+		
+		Map<String, Object> response = new HashMap<>();
+		response.put("count", results.size());
+		response.put("stacktraces", results);
+		response.put("filters", new HashMap<String, Object>() {
+			{
+				put("startDate", startDate);
+				put("endDate", endDate);
+				put("ip", ip);
+				put("errorCode", errorCode);
+				put("messageSearch", messageSearch);
+			}
+		});
+		
 		return ResponseEntity.ok(response);
 	}
 

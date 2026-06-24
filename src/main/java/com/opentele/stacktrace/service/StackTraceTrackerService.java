@@ -3,28 +3,32 @@ package com.opentele.stacktrace.service;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.Tracer;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 import com.opentele.stacktrace.exception.TelemetryException;
 import com.opentele.stacktrace.model.StackTraceData;
 import com.opentele.stacktrace.persistence.RedisStackTracePersistenceService;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
 @Service
+@RequiredArgsConstructor
 public class StackTraceTrackerService {
 
 	private final Tracer tracer;
 	private final List<StackTraceData> trackedStackTraces;
-
-	@Autowired(required = false)
+	
+	@Setter
 	private RedisStackTracePersistenceService redisService;
 
 	public StackTraceTrackerService() {
 		this.tracer = GlobalOpenTelemetry.getTracer("stacktrace-tracker");
 		this.trackedStackTraces = new ArrayList<>();
+		this.redisService = null;
 	}
 
 	public StackTraceData trackStackTrace(String ip, TelemetryException exception) {
@@ -72,6 +76,44 @@ public class StackTraceTrackerService {
 				.toList();
 	}
 
+	public List<StackTraceData> filterStackTraces(LocalDate startDate, LocalDate endDate, String ip, String errorCode, String messageSearch) {
+		List<StackTraceData> allTraces = getAllTrackedStackTraces();
+		
+		return allTraces.stream()
+				.filter(trace -> {
+					if (startDate != null && trace.getDate() != null) {
+						LocalDate traceDate = LocalDate.parse(trace.getDate());
+						if (traceDate.isBefore(startDate)) {
+							return false;
+						}
+					}
+					
+					if (endDate != null && trace.getDate() != null) {
+						LocalDate traceDate = LocalDate.parse(trace.getDate());
+						if (traceDate.isAfter(endDate)) {
+							return false;
+						}
+					}
+					
+					if (ip != null && !ip.isEmpty() && !trace.getIp().equals(ip)) {
+						return false;
+					}
+					
+					if (errorCode != null && !errorCode.isEmpty() && !trace.getErrorCode().equals(errorCode)) {
+						return false;
+					}
+					
+					if (messageSearch != null && !messageSearch.isEmpty()) {
+						if (trace.getErrorMessage() == null || !trace.getErrorMessage().toLowerCase().contains(messageSearch.toLowerCase())) {
+							return false;
+						}
+					}
+					
+					return true;
+				})
+				.toList();
+	}
+
 	public void clearTrackedStackTraces() {
 		trackedStackTraces.clear();
 
@@ -86,8 +128,5 @@ public class StackTraceTrackerService {
 		}
 		return trackedStackTraces.size();
 	}
-
-	public void setRedisService(RedisStackTracePersistenceService redisService) {
-		this.redisService = redisService;
-	}
 }
+
