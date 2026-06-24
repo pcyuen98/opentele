@@ -10,15 +10,14 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 @ActiveProfiles("test")
 public class ApplicationTest {
 
-    @Test
-    public void contextLoads() {
-        assertNotNull(ApplicationTest.class);
-    }
+	@Test
+	public void contextLoads() {
+		assertNotNull(ApplicationTest.class);
+	}
 
-    @Test
-    public void applicationStartsSuccessfully() {
-        assertNotNull(ApplicationTest.class);
-        // Verify application can start even if Redis is not available
-    }
+	@Test
+	public void applicationStartsSuccessfully() {
+		assertNotNull(ApplicationTest.class);
+	}
 }
 
