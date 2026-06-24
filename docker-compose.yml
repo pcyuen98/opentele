@@ -1,0 +1,63 @@
+version: '3.8'
+
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: opentele-redis
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    networks:
+      - opentele-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  redisinsight:
+    image: redis/redisinsight:latest
+    container_name: opentele-redisinsight
+    ports:
+      - "5540:5540"
+    volumes:
+      - redisinsight_data:/data
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - opentele-network
+
+  opentele-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: opentele-service
+    ports:
+      - "5080:5080"
+    environment:
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+      SERVER_PORT: 5080
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - opentele-network
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:5080/api/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  redis_data:
+    driver: local
+  redisinsight_data:
+    driver: local
+
+networks:
+  opentele-network:
+    driver: bridge
