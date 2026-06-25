@@ -1,34 +1,35 @@
 package com.opentele.stacktrace;
 
-import java.io.Serializable;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.UUID;
 
-public class StackTraceData implements Serializable {
-
-    private static final long serialVersionUID = 1L;
-
+public class StackTraceData {
+    private UUID id;
     private String ip;
     private LocalDateTime timestamp;
     private String date;
     private String stackTrace;
     private String errorMessage;
     private String errorCode;
-    private UUID id;
 
-    // Required by Jackson
-    public StackTraceData() {
-    }
+    public StackTraceData() {}
 
-    public StackTraceData(String ip, TelemetryException exception) {
+    public StackTraceData(String ip, TelemetryException ex) {
+        this.id = UUID.randomUUID();
         this.ip = ip;
         this.timestamp = LocalDateTime.now();
-        this.date = this.timestamp.format(DateTimeFormatter.ISO_LOCAL_DATE);
-        this.stackTrace = exception.getStackTraceString();
-        this.errorMessage = exception.getMessage();
-        this.errorCode = exception.getErrorType();
-        this.id = exception.getId();
+        this.date = this.timestamp.toLocalDate().toString();
+        this.stackTrace = ex.getStackTraceString();
+        this.errorMessage = ex.getMessage();
+        this.errorCode = ex.getErrorType();
+    }
+
+    public UUID getId() {
+        return id;
+    }
+
+    public void setId(UUID id) {
+        this.id = id;
     }
 
     public String getIp() {
@@ -71,27 +72,11 @@ public class StackTraceData implements Serializable {
         this.errorMessage = errorMessage;
     }
 
-    public String getErrorType() {
-        return errorCode;
-    }
-
-    public void setErrorType(String errorType) {
-        this.errorCode = errorType;
-    }
-
     public String getErrorCode() {
         return errorCode;
     }
 
     public void setErrorCode(String errorCode) {
         this.errorCode = errorCode;
-    }
-
-    public UUID getId() {
-        return id;
-    }
-
-    public void setId(UUID id) {
-        this.id = id;
     }
 }

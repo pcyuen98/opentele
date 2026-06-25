@@ -1,0 +1,47 @@
+<html>
+<head><title>Why Redis Persistence Fails</title></head>
+<body>
+<h1>Root cause: Redis persistence not invoked because redisService is null</h1>
+<p>Evidence from code (file paths & key excerpts):</p>
+<ul>
+  <li>StackTraceTrackerService (src/main/java/com/opentele/stacktrace/service/StackTraceTrackerService.java):
+    <pre>
+      @Setter
+      private RedisStackTracePersistenceService redisService;
+
+      public StackTraceTrackerService() {
+        this.tracer = GlobalOpenTelemetry.getTracer("stacktrace-tracker");
+        this.trackedStackTraces = new ArrayList<>();
+        this.redisService = null;  // explicitly set to null
+      }
+
+      ...
+
+      if (redisService != null) {
+        redisService.persistStackTrace(traceId, data);
+      }
+    </pre>
+  </li>
+  <li>RedisStackTracePersistenceService exists and is a @Service (src/main/java/com/opentele/stacktrace/persistence/RedisStackTracePersistenceService.java) and would persist data when called (persistStackTrace writes keys and index sets).</li>
+</ul>
+<h2>Why this prevents persistence</h2>
+<p>Because StackTraceTrackerService never receives a RedisStackTracePersistenceService instance at runtime (redisService remains null), the condition (redisService != null) is false and persistStackTrace is never invoked. Thus no data is written to Redis despite Redis beans and configuration being present (application.properties, RedisConfig).</p>
+<h2>Secondary note</h2>
+<p>The controller method trackError has only the first parameter annotated with @RequestParam; the other String parameters (errorCode, stacktrace) are un-annotated which can lead to null values coming from requests — this is separate and would not by itself stop persistence but may result in incomplete stored data.</p>
+<h2>How to fix (non-exhaustive, no code changes applied here)</h2>
+<ul>
+  <li>Inject RedisStackTracePersistenceService into StackTraceTrackerService. Preferred: constructor injection (make the dependency final and include it in constructor).</li>
+  <li>Or annotate the setter with @Autowired so Spring calls the setter and sets redisService.</li>
+  <li>Alternatively, remove the explicit no-arg constructor and let Lombok/@RequiredArgsConstructor generate a constructor that includes required beans for injection.</li>
+  <li>Add @RequestParam to the other controller params (errorCode, stacktrace) to ensure values are bound from request parameters.</li>
+</ul>
+<p>Files referenced:
+<ul>
+  <li>src/main/java/com/opentele/stacktrace/service/StackTraceTrackerService.java</li>
+  <li>src/main/java/com/opentele/stacktrace/persistence/RedisStackTracePersistenceService.java</li>
+  <li>src/main/java/com/opentele/stacktrace/controller/StackTraceController.java</li>
+  <li>src/main/resources/application.properties</li>
+</ul>
+</p>
+</body>
+</html>
