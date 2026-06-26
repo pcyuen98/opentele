@@ -1,4 +1,4 @@
-package com.opentele.stacktrace;
+package com.opentele.stacktrace.service;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.opentele.stacktrace.exception.TelemetryException;
+import com.opentele.stacktrace.model.StackTraceData;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.trace.Span;

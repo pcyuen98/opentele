@@ -1,4 +1,4 @@
-package com.opentele.stacktrace;
+package com.opentele.stacktrace.model;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;

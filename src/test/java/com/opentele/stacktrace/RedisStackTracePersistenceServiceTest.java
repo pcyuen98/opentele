@@ -24,6 +24,8 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.test.context.ActiveProfiles;
 
 import com.opentele.stacktrace.exception.TelemetryException;
+import com.opentele.stacktrace.model.StackTraceData;
+import com.opentele.stacktrace.service.RedisStackTracePersistenceService;
 
 import redis.embedded.RedisServer;
 

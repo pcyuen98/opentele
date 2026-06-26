@@ -1,4 +1,4 @@
-package com.opentele.stacktrace;
+package com.opentele.stacktrace.controller;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -23,6 +23,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.opentele.stacktrace.exception.TelemetryException;
+import com.opentele.stacktrace.model.StackTraceData;
+import com.opentele.stacktrace.service.StackTraceTrackerService;
 
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.annotations.info.Info;
