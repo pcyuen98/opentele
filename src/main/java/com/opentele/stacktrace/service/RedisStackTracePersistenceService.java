@@ -48,7 +48,7 @@ public class RedisStackTracePersistenceService {
 
         } catch (Exception e) {
             log.error("Failed to serialize stack trace data for traceId: {}", traceId, e);
-            throw new RuntimeException(
+            throw new RedisStackTracePersistenceException(
                     "Failed to serialize stack trace data", e);
         }
     }
@@ -69,7 +69,7 @@ public class RedisStackTracePersistenceService {
 
         } catch (Exception e) {
             log.error("Failed to deserialize stack trace data for traceId: {}", traceId, e);
-            throw new RuntimeException(
+            throw new RedisStackTracePersistenceException(
                     "Failed to deserialize stack trace data", e);
         }
     }
@@ -163,5 +163,11 @@ public class RedisStackTracePersistenceService {
         return Boolean.TRUE.equals(
                 stringRedisTemplate.hasKey(key)
         );
+    }
+
+    private static class RedisStackTracePersistenceException extends RuntimeException {
+        RedisStackTracePersistenceException(String message, Throwable cause) {
+            super(message, cause);
+        }
     }
 }

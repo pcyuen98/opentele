@@ -27,8 +27,10 @@ import com.opentele.stacktrace.exception.TelemetryException;
 import com.opentele.stacktrace.model.StackTraceData;
 import com.opentele.stacktrace.service.RedisStackTracePersistenceService;
 
+import lombok.extern.slf4j.Slf4j;
 import redis.embedded.RedisServer;
 
+@Slf4j
 @SpringBootTest
 @ActiveProfiles("test")
 @Import(RedisStackTracePersistenceServiceTest.EmbeddedRedisConfiguration.class)
@@ -86,13 +88,16 @@ class RedisStackTracePersistenceServiceTest {
 
     private void clearRedis() {
         try {
-            stringRedisTemplate.getConnectionFactory()
-                    .getConnection()
-                    .flushAll();
+            var connection = stringRedisTemplate.getConnectionFactory().getConnection();
+            if (connection != null) {
+                connection.flushAll();
+            }
         } catch (Exception e) {
+            log.debug("Failed to flush Redis, attempting alternative method", e);
             try {
                 stringRedisTemplate.delete(stringRedisTemplate.keys("*"));
             } catch (Exception ignored) {
+                log.debug("Alternative Redis clear also failed", ignored);
             }
         }
     }

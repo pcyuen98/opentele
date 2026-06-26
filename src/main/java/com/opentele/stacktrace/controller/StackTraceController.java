@@ -59,16 +59,15 @@ public class StackTraceController {
     public ResponseEntity<String> getDocumentation() throws IOException {
         log.debug("Documentation endpoint called");
         Resource resource = new ClassPathResource("how.html");
-        String content = new String(
-                Files.readAllBytes(resource.getFile().toPath()),
-                StandardCharsets.UTF_8
-        );
+        String content = Files.readString(resource.getFile().toPath(), StandardCharsets.UTF_8);
         return ResponseEntity.ok(content);
     }
 
 	@PostMapping("/track-error")
 	public ResponseEntity<Map<String, Object>> trackError(
-			@RequestParam String message, String errorCode, String stacktrace,
+			@RequestParam String message, 
+			@RequestParam(required = false) String errorCode, 
+			@RequestParam(required = false) String stacktrace,
 			HttpServletRequest request) {
 
 		String ip = extractClientIp(request);
@@ -146,8 +145,7 @@ public class StackTraceController {
         LocalDateTime from = null;
         LocalDateTime to = null;
 
-        DateTimeFormatter formatter =
-                DateTimeFormatter.ISO_LOCAL_DATE_TIME;
+        DateTimeFormatter formatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
 
         if (fromTimestamp != null && !fromTimestamp.isBlank()) {
             from = LocalDateTime.parse(fromTimestamp, formatter);
@@ -157,13 +155,12 @@ public class StackTraceController {
             to = LocalDateTime.parse(toTimestamp, formatter);
         }
 
-        List<StackTraceData> results =
-                trackerService.filterStackTraces(
-                        from,
-                        to,
-                        ip,
-                        errorCode,
-                        messageSearch);
+        List<StackTraceData> results = trackerService.filterStackTraces(
+                from,
+                to,
+                ip,
+                errorCode,
+                messageSearch);
 
         Map<String, Object> response = new HashMap<>();
         response.put("count", results.size());

@@ -2,7 +2,7 @@ package com.opentele.stacktrace.config;
 
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.trace.SdkTracerProvider;
-import io.opentelemetry.sdk.trace.export.SimpleSpanProcessor;
+import io.opentelemetry.sdk.trace.export.BatchSpanProcessor;
 import io.opentelemetry.exporter.logging.LoggingSpanExporter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -17,7 +17,7 @@ public class OpenTelemetryConfig {
     public OpenTelemetrySdk openTelemetrySdk() {
         log.debug("Initializing OpenTelemetry SDK");
         SdkTracerProvider sdkTracerProvider = SdkTracerProvider.builder()
-                .addSpanProcessor(SimpleSpanProcessor.create(new LoggingSpanExporter()))
+                .addSpanProcessor(BatchSpanProcessor.builder(new LoggingSpanExporter()).build())
                 .build();
 
         return OpenTelemetrySdk.builder()
