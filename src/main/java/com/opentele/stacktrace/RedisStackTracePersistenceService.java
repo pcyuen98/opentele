@@ -6,10 +6,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
+import lombok.extern.slf4j.Slf4j;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
+@Slf4j
 @Service
 public class RedisStackTracePersistenceService {
 
@@ -26,6 +29,7 @@ public class RedisStackTracePersistenceService {
         this.stringRedisTemplate = stringRedisTemplate;
         this.objectMapper = new ObjectMapper();
         this.objectMapper.registerModule(new JavaTimeModule());
+        log.debug("RedisStackTracePersistenceService initialized");
     }
 
     public void persistStackTrace(String traceId, StackTraceData data) {
@@ -37,8 +41,11 @@ public class RedisStackTracePersistenceService {
             stringRedisTemplate.opsForSet().add(STACKTRACE_INDEX_KEY, traceId);
             stringRedisTemplate.opsForSet()
                     .add(STACKTRACE_IP_INDEX_PREFIX + data.getIp(), traceId);
+            
+            log.debug("Persisted stack trace: {}", traceId);
 
         } catch (Exception e) {
+            log.error("Failed to serialize stack trace data for traceId: {}", traceId, e);
             throw new RuntimeException(
                     "Failed to serialize stack trace data", e);
         }
@@ -59,6 +66,7 @@ public class RedisStackTracePersistenceService {
             );
 
         } catch (Exception e) {
+            log.error("Failed to deserialize stack trace data for traceId: {}", traceId, e);
             throw new RuntimeException(
                     "Failed to deserialize stack trace data", e);
         }
@@ -80,6 +88,7 @@ public class RedisStackTracePersistenceService {
             }
         }
 
+        log.debug("Retrieved {} stack traces from Redis", result.size());
         return result;
     }
 
@@ -99,6 +108,7 @@ public class RedisStackTracePersistenceService {
             }
         }
 
+        log.debug("Retrieved {} stack traces for IP: {}", result.size(), ip);
         return result;
     }
 
@@ -113,6 +123,8 @@ public class RedisStackTracePersistenceService {
                     .remove(STACKTRACE_INDEX_KEY, traceId);
             stringRedisTemplate.opsForSet()
                     .remove(STACKTRACE_IP_INDEX_PREFIX + data.getIp(), traceId);
+            
+            log.debug("Deleted stack trace: {}", traceId);
         }
     }
 
@@ -132,6 +144,8 @@ public class RedisStackTracePersistenceService {
         if (ipIndexKeys != null && !ipIndexKeys.isEmpty()) {
             stringRedisTemplate.delete(ipIndexKeys);
         }
+        
+        log.info("Cleared all stack traces from Redis");
     }
 
     public long getStackTraceCount() {
