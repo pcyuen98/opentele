@@ -1,4 +1,4 @@
-package com.opentele.stacktrace;
+package com.opentele.stacktrace.exception;
 
 import java.io.PrintWriter;
 import java.io.Serializable;

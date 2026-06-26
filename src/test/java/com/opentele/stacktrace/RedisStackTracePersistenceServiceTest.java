@@ -23,6 +23,8 @@ import org.springframework.context.annotation.Import;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.test.context.ActiveProfiles;
 
+import com.opentele.stacktrace.exception.TelemetryException;
+
 import redis.embedded.RedisServer;
 
 @SpringBootTest

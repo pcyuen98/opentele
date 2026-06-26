@@ -1,4 +1,4 @@
-package com.opentele.stacktrace;
+package com.opentele.stacktrace.config;
 
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.trace.SdkTracerProvider;

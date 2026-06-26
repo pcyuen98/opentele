@@ -1,18 +1,20 @@
 package com.opentele.stacktrace;
 
-import io.opentelemetry.api.GlobalOpenTelemetry;
-import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.api.trace.Tracer;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
-import lombok.Setter;
-import lombok.extern.slf4j.Slf4j;
-
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import com.opentele.stacktrace.exception.TelemetryException;
+
+import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.Tracer;
+import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Service
@@ -100,42 +102,56 @@ public class StackTraceTrackerService {
         return trackedStackTraces.size();
     }
     
-	public List<StackTraceData> filterStackTraces(LocalDate startDate, LocalDate endDate, String ip, String errorCode, String messageSearch) {
-		List<StackTraceData> allTraces = getAllTrackedStackTraces();
-		
-		return allTraces.stream()
-				.filter(trace -> {
-					if (startDate != null && trace.getDate() != null) {
-						LocalDate traceDate = LocalDate.parse(trace.getDate());
-						if (traceDate.isBefore(startDate)) {
-							return false;
-						}
-					}
-					
-					if (endDate != null && trace.getDate() != null) {
-						LocalDate traceDate = LocalDate.parse(trace.getDate());
-						if (traceDate.isAfter(endDate)) {
-							return false;
-						}
-					}
-					
-					if (ip != null && !ip.isEmpty() && !trace.getIp().equals(ip)) {
-						return false;
-					}
-					
-					if (errorCode != null && !errorCode.isEmpty() && !trace.getErrorCode().equals(errorCode)) {
-						return false;
-					}
-					
-					if (messageSearch != null && !messageSearch.isEmpty()) {
-						if (trace.getErrorMessage() == null || !trace.getErrorMessage().toLowerCase().contains(messageSearch.toLowerCase())) {
-							return false;
-						}
-					}
-					
-					return true;
-				})
-				.toList();
-	}
+    public List<StackTraceData> filterStackTraces(
+            LocalDateTime fromTimestamp,
+            LocalDateTime toTimestamp,
+            String ip,
+            String errorCode,
+            String messageSearch) {
+
+        List<StackTraceData> allTraces = getAllTrackedStackTraces();
+
+        return allTraces.stream()
+                .filter(trace -> {
+
+                    if (fromTimestamp != null
+                            && trace.getTimestamp() != null
+                            && trace.getTimestamp().isBefore(fromTimestamp)) {
+                        return false;
+                    }
+
+                    if (toTimestamp != null
+                            && trace.getTimestamp() != null
+                            && trace.getTimestamp().isAfter(toTimestamp)) {
+                        return false;
+                    }
+
+                    if (ip != null
+                            && !ip.isBlank()
+                            && !ip.equals(trace.getIp())) {
+                        return false;
+                    }
+
+                    if (errorCode != null
+                            && !errorCode.isBlank()
+                            && !errorCode.equals(trace.getErrorCode())) {
+                        return false;
+                    }
+
+                    if (messageSearch != null
+                            && !messageSearch.isBlank()) {
+
+                        if (trace.getErrorMessage() == null
+                                || !trace.getErrorMessage()
+                                .toLowerCase()
+                                .contains(messageSearch.toLowerCase())) {
+                            return false;
+                        }
+                    }
+
+                    return true;
+                })
+                .toList();
+    }
 
 }
